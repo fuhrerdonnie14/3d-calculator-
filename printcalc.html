@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Print Cost Calculator</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#4CAF50">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧮</text></svg>">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary: #4CAF50;
+            --primary-dark: #45a049;
+            --secondary: #2196F3;
+            --background: #f5f5f5;
+            --surface: #ffffff;
+            --text: #333333;
+            --text-secondary: #666666;
+            --border: #e0e0e0;
+            --shadow: 0 4px 12px rgba(0,0,0,0.1);
+            --radius: 12px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --background: #1a1a1a;
+                --surface: #2d2d2d;
+                --text: #ffffff;
+                --text-secondary: #cccccc;
+                --border: #404040;
+                --shadow: 0 4px 12px rgba(0,0,0,0.3);
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 0;
+            margin: 0;
+            min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .app {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            padding-bottom: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-top: env(safe-area-inset-top);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .card h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card h2::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text);
+            font-size: 16px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background: var(--surface);
+            color: var(--text);
+            font-size: 16px;
+            transition: all 0.2s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+
+        .input-with-unit {
+            position: relative;
+        }
+
+        .unit {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        button {
+            flex: 1;
+            padding: 18px;
+            border: none;
+            border-radius: 8px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover, .btn-primary:active {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--text);
+            border: 2px solid var(--border);
+        }
+
+        .btn-secondary:hover, .btn-secondary:active {
+            background: var(--background);
+        }
+
+        .result {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-top: 20px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+            animation: slideUp 0.3s ease;
+        }
+
+        .total-cost {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .breakdown {
+            text-align: left;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .breakdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .history {
+            margin-top: 30px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: var(--surface);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .history-info {
+            flex: 1;
+        }
+
+        .history-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .history-details {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .history-cost {
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--primary);
+        }
+
+        .empty-history {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 40px 20px;
+        }
+
+        .tabs {
+            display: flex;
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 4px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 16px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .app {
+                padding: 16px;
+                padding-bottom: 30px;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            input, select {
+                padding: 14px;
+                font-size: 16px; /* Предотвращает zoom в iOS */
+            }
+            
+            button {
+                padding: 16px;
+            }
+        }
+
+        /* Улучшения для iOS */
+        input[type="number"] {
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        select {
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'><path fill='%23666' d='M2 0L0 2h4zm0 5L0 3h4z'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            background-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="header">
+            <h1>🧮 3D Print Calculator</h1>
+            <p>Расчет себестоимости печати</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('calculator')">Калькулятор</button>
+            <button class="tab" onclick="switchTab('history')">История</button>
+            <button class="tab" onclick="switchTab('settings')">Настройки</button>
+        </div>
+
+        <div id="calculator-tab" class="tab-content active">
+            <div class="card">
+                <h2>Основные параметры</h2>
+                
+                <div class="form-group">
+                    <label for="projectName">Название проекта:</label>
+                    <input type="text" id="projectName" placeholder="Моя модель" value="Текущая печать">
+                </div>
+
+                <div class="form-group">
+                    <label for="filamentType">Тип пластика:</label>
+                    <select id="filamentType">
+                        <option value="pla">PLA</option>
+                        <option value="petg">PETG</option>
+                        <option value="abs">ABS</option>
+                        <option value="asa">ASA</option>
+                        <option value="tpu">TPU</option>
+                        <option value="nylon">Nylon</option>
+                        <option value="pc">Polycarbonate</option>
+                        <option value="custom">Другой</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="filamentPrice">Цена катушки (руб):</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="filamentPrice" value="1500" step="0.01">
+                        <span class="unit">₽</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="modelWeight">Вес модели (г):</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="modelWeight" value="20" step="0.01">
+                        <span class="unit">г</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="printTime">Время печати:</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="printTime" value="5" step="0.01">
+                        <span class="unit">ч</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Энергопотребление</h2>
+                
+                <div class="form-group">
+                    <label for="printerPower">Мощность принтера (Вт):</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="printerPower" value="200">
+                        <span class="unit">Вт</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="electricityPrice">Стоимость электроэнергии:</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="electricityPrice" value="5.0" step="0.01">
+                        <span class="unit">₽/кВт·ч</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Дополнительные расходы</h2>
+                
+                <div class="form-group">
+                    <label for="printerCost">Стоимость принтера (руб):</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="printerCost" value="30000">
+                        <span class="unit">₽</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="printerLifespan">Срок службы принтера:</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="printerLifespan" value="5000">
+                        <span class="unit">ч</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="maintenanceCost">Расходы на обслуживание:</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="maintenanceCost" value="500">
+                        <span class="unit">₽/мес</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="workHoursPerMonth">Часов печати в месяц:</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="workHoursPerMonth" value="100">
+                        <span class="unit">ч</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="operatorTime">Время на подготовку:</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="operatorTime" value="0.5" step="0.01">
+                        <span class="unit">ч</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="hourlyRate">Почасовая ставка:</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="hourlyRate" value="0">
+                        <span class="unit">₽/ч</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-secondary" onclick="resetForm()">Сбросить</button>
+                <button class="btn-primary" onclick="calculateCost()">Рассчитать</button>
+            </div>
+
+            <div id="result" class="result">
+                <div class="total-cost" id="totalCost">0.00 ₽</div>
+                <div>Себестоимость печати</div>
+                
+                <div class="breakdown">
+                    <div class="breakdown-item">
+                        <span>Пластик:</span>
+                        <span id="costPlastic">0.00 ₽</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span>Электричество:</span>
+                        <span id="costElectricity">0.00 ₽</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span>Амортизация:</span>
+                        <span id="costDepreciation">0.00 ₽</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span>Обслуживание:</span>
+                        <span id="costMaintenance">0.00 ₽</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span>Работа:</span>
+                        <span id="costOperator">0.00 ₽</span>
+                    </div>
+                </div>
+                
+                <button class="btn-secondary" onclick="saveToHistory()" style="margin-top: 16px; background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3);">
+                    Сохранить в историю
+                </button>
+            </div>
+        </div>
+
+        <div id="history-tab" class="tab-content">
+            <div class="card">
+                <h2>История расчетов</h2>
+                <div id="historyList">
+                    <div class="empty-history">
+                        История расчетов пуста
+                    </div>
+                </div>
+                <button class="btn-secondary" onclick="clearHistory()" style="width: 100%; margin-top: 10px;">
+                    Очистить историю
+                </button>
+            </div>
+        </div>
+
+        <div id="settings-tab" class="tab-content">
+            <div class="card">
+                <h2>Настройки по умолчанию</h2>
+                <p style="margin-bottom: 20px; color: var(--text-secondary);">
+                    Эти значения будут автоматически подставляться при новом расчете
+                </p>
+                
+                <div class="form-group">
+                    <label for="defaultFilamentPrice">Цена пластика по умолчанию:</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="defaultFilamentPrice" value="1500" step="0.01">
+                        <span class="unit">₽</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="defaultPrinterPower">Мощность принтера по умолчанию:</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="defaultPrinterPower" value="200">
+                        <span class="unit">Вт</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="defaultElectricityPrice">Стоимость электричества по умолчанию:</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="defaultElectricityPrice" value="5.0" step="0.01">
+                        <span class="unit">₽/кВт·ч</span>
+                    </div>
+                </div>
+
+                <button class="btn-primary" onclick="saveSettings()" style="width: 100%;">
+                    Сохранить настройки
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Загрузка при старте
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSettings();
+            loadHistory();
+            updateHistoryDisplay();
+        });
+
+        // Переключение вкладок
+        function switchTab(tabName) {
+            // Скрыть все вкладки
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Показать выбранную вкладку
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // Обновить активную кнопку
+            document.querySelectorAll('.tab').forEach(button => {
+                button.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        // Расчет себестоимости
+        function calculateCost() {
+            // Получаем значения
+            const filamentPrice = parseFloat(document.getElementById('filamentPrice').value) || 0;
+            const modelWeight = parseFloat(document.getElementById('modelWeight').value) || 0;
+            const printTime = parseFloat(document.getElementById('printTime').value) || 0;
+            const printerPower = parseFloat(document.getElementById('printerPower').value) || 0;
+            const electricityPrice = parseFloat(document.getElementById('electricityPrice').value) || 0;
+            const printerCost = parseFloat(document.getElementById('printerCost').value) || 0;
+            const printerLifespan = parseFloat(document.getElementById('printerLifespan').value) || 1;
+            const maintenanceCost = parseFloat(document.getElementById('maintenanceCost').value) || 0;
+            const workHoursPerMonth = parseFloat(document.getElementById('workHoursPerMonth').value) || 1;
+            const operatorTime = parseFloat(document.getElementById('operatorTime').value) || 0;
+            const hourlyRate = parseFloat(document.getElementById('hourlyRate').value) || 0;
+
+            // Расчеты
+            const plasticCost = (modelWeight / 1000) * filamentPrice;
+            const electricityCost = (printerPower * printTime / 1000) * electricityPrice;
+            const printerDepreciation = (printerCost / printerLifespan) * printTime;
+            const maintenanceCostPerHour = maintenanceCost / workHoursPerMonth;
+            const totalMaintenanceCost = maintenanceCostPerHour * printTime;
+            const operatorCost = operatorTime * hourlyRate;
+
+            // Итог
+            const totalCost = plasticCost + electricityCost + printerDepreciation + totalMaintenanceCost + operatorCost;
+
+            // Показываем результат
+            document.getElementById('totalCost').textContent = totalCost.toFixed(2) + ' ₽';
+            document.getElementById('costPlastic').textContent = plasticCost.toFixed(2) + ' ₽';
+            document.getElementById('costElectricity').textContent = electricityCost.toFixed(2) + ' ₽';
+            document.getElementById('costDepreciation').textContent = printerDepreciation.toFixed(2) + ' ₽';
+            document.getElementById('costMaintenance').textContent = totalMaintenanceCost.toFixed(2) + ' ₽';
+            document.getElementById('costOperator').textContent = operatorCost.toFixed(2) + ' ₽';
+            
+            document.getElementById('result').classList.add('show');
+            
+            // Сохраняем текущий расчет для истории
+            currentCalculation = {
+                name: document.getElementById('projectName').value,
+                timestamp: new Date().toISOString(),
+                total: totalCost,
+                details: { plasticCost, electricityCost, printerDepreciation, totalMaintenanceCost, operatorCost },
+                params: { modelWeight, printTime, filamentPrice }
+            };
+        }
+
+        // Сброс формы
+        function resetForm() {
+            document.getElementById('projectName').value = 'Текущая печать';
+            document.getElementById('modelWeight').value = '';
+            document.getElementById('printTime').value = '';
+            document.getElementById('result').classList.remove('show');
+        }
+
+        // Сохранение в историю
+        let currentCalculation = null;
+
+        function saveToHistory() {
+            if (!currentCalculation) return;
+            
+            const history = JSON.parse(localStorage.getItem('printHistory') || '[]');
+            history.unshift(currentCalculation);
+            
+            // Ограничиваем историю 50 записями
+            if (history.length > 50) {
+                history.pop();
+            }
+            
+            localStorage.setItem('printHistory', JSON.stringify(history));
+            updateHistoryDisplay();
+            
+            // Показываем подтверждение
+            alert('Расчет сохранен в историю!');
+        }
+
+        // Загрузка истории
+        function loadHistory() {
+            return JSON.parse(localStorage.getItem('printHistory') || '[]');
+        }
+
+        // Обновление отображения истории
+        function updateHistoryDisplay() {
+            const history = loadHistory();
+            const historyList = document.getElementById('historyList');
+            
+            if (history.length === 0) {
+                historyList.innerHTML = '<div class="empty-history">История расчетов пуста</div>';
+                return;
+            }
+            
+            historyList.innerHTML = history.map(item => `
+                <div class="history-item">
+                    <div class="history-info">
+                        <div class="history-name">${item.name}</div>
+                        <div class="history-details">
+                            ${new Date(item.timestamp).toLocaleDateString('ru-RU')} • 
+                            ${item.params.modelWeight}g • ${item.params.printTime}ч
+                        </div>
+                    </div>
+                    <div class="history-cost">${item.total.toFixed(2)} ₽</div>
+                </div>
+            `).join('');
+        }
+
+        // Очистка истории
+        function clearHistory() {
+            if (confirm('Вы уверены, что хотите очистить всю историю расчетов?')) {
+                localStorage.removeItem('printHistory');
+                updateHistoryDisplay();
+            }
+        }
+
+        // Сохранение настроек
+        function saveSettings() {
+            const settings = {
+                filamentPrice: parseFloat(document.getElementById('defaultFilamentPrice').value) || 1500,
+                printerPower: parseFloat(document.getElementById('defaultPrinterPower').value) || 200,
+                electricityPrice: parseFloat(document.getElementById('defaultElectricityPrice').value) || 5.0
+            };
+            
+            localStorage.setItem('printSettings', JSON.stringify(settings));
+            alert('Настройки сохранены!');
+        }
+
+        // Загрузка настроек
+        function loadSettings() {
+            const settings = JSON.parse(localStorage.getItem('printSettings') || '{}');
+            
+            if (settings.filamentPrice) {
+                document.getElementById('filamentPrice').value = settings.filamentPrice;
+                document.getElementById('defaultFilamentPrice').value = settings.filamentPrice;
+            }
+            if (settings.printerPower) {
+                document.getElementById('printerPower').value = settings.printerPower;
+                document.getElementById('defaultPrinterPower').value = settings.printerPower;
+            }
+            if (settings.electricityPrice) {
+                document.getElementById('electricityPrice').value = settings.electricityPrice;
+                document.getElementById('defaultElectricityPrice').value = settings.electricityPrice;
+            }
+        }
+
+        // Автосохранение при изменении полей
+        document.querySelectorAll('input, select').forEach(element => {
+            element.addEventListener('change', function() {
+                if (this.id !== 'defaultFilamentPrice' && this.id !== 'defaultPrinterPower' && this.id !== 'defaultElectricityPrice') {
+                    const settings = {
+                        filamentPrice: parseFloat(document.getElementById('filamentPrice').value) || 1500,
+                        printerPower: parseFloat(document.getElementById('printerPower').value) || 200,
+                        electricityPrice: parseFloat(document.getElementById('electricityPrice').value) || 5.0
+                    };
+                    localStorage.setItem('printSettings', JSON.stringify(settings));
+                }
+            });
+        });
+    </script>
+</body>
+</html>
