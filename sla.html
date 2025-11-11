@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SLA Calculator</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, sans-serif; padding: 20px; background: #f0f0f0; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .card { background: white; padding: 20px; margin: 10px 0; border-radius: 10px; }
+        h1 { text-align: center; color: #333; margin-bottom: 20px; }
+        .input-group { margin: 15px 0; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
+        button { width: 100%; padding: 15px; background: #007AFF; color: white; border: none; border-radius: 8px; font-size: 18px; margin: 10px 0; }
+        .result { background: #4CAF50; color: white; padding: 20px; border-radius: 10px; margin-top: 20px; text-align: center; }
+        .links { text-align: center; margin-top: 20px; }
+        .links a { color: #007AFF; text-decoration: none; margin: 0 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 SLA Калькулятор</h1>
+        
+        <div class="card">
+            <div class="input-group">
+                <label>Цена смолы (руб/кг):</label>
+                <input type="number" id="resinPrice" value="1900">
+            </div>
+            <div class="input-group">
+                <label>Объем смолы (мл):</label>
+                <input type="number" id="resinVolume" value="60">
+            </div>
+            <div class="input-group">
+                <label>Время печати (часы):</label>
+                <input type="number" id="printTime" value="6">
+            </div>
+            <div class="input-group">
+                <label>Стоимость спирта для промывки (руб):</label>
+                <input type="number" id="alcoholCost" value="50">
+            </div>
+            <button onclick="calculateSLA()">🧮 Рассчитать</button>
+        </div>
+
+        <div class="result" id="result">
+            <h2>Себестоимость: <span id="total">0</span> ₽</h2>
+            <p>💡 Можно вставить в калькулятор прибыли</p>
+        </div>
+
+        <div class="links">
+            <a href="index.html">🔄 FDM калькулятор</a>
+            <a href="profit.html">💰 Калькулятор прибыли</a>
+        </div>
+    </div>
+
+    <script>
+        function calculateSLA() {
+            var resinPrice = parseFloat(document.getElementById('resinPrice').value) || 0;
+            var resinVolume = parseFloat(document.getElementById('resinVolume').value) || 0;
+            var printTime = parseFloat(document.getElementById('printTime').value) || 0;
+            var alcoholCost = parseFloat(document.getElementById('alcoholCost').value) || 0;
+            
+            // Плотность смолы ~1.15 г/мл
+            var resinWeight = resinVolume * 1.15;
+            var resinCost = (resinWeight / 1000) * resinPrice;
+            
+            // Электричество (60Вт × время × 5₽/кВт·ч)
+            var electricityCost = (60 * printTime / 1000) * 5;
+            
+            // Амортизация (15000₽ принтер / 70 часов в месяц)
+            var depreciation = (15000 / (70 * 12)) * printTime;
+            
+            // Доп расходы 10%
+            var additional = (resinCost + electricityCost + depreciation + alcoholCost) * 0.1;
+            
+            var total = resinCost + electricityCost + depreciation + alcoholCost + additional;
+            
+            document.getElementById('total').textContent = total.toFixed(0);
+        }
+        
+        calculateSLA();
+    </script>
+</body>
+</html>
