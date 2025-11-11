@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FDM Print Calculator</title>
+    <title>3D Print Calculators</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <style>
@@ -65,9 +65,40 @@
             color: var(--text);
         }
 
-        .header p {
+        .tabs {
+            display: flex;
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 4px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 16px;
+            text-align: center;
+            background: transparent;
+            border: none;
             color: var(--text-secondary);
-            font-size: 16px;
+            font-weight: 500;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
         }
 
         .card {
@@ -93,9 +124,12 @@
             content: '';
             width: 4px;
             height: 20px;
-            background: var(--primary);
             border-radius: 2px;
         }
+
+        .fdm-card h2::before { background: #4CAF50; }
+        .sla-card h2::before { background: #9C27B0; }
+        .profit-card h2::before { background: #FF9800; }
 
         .form-group {
             margin-bottom: 20px;
@@ -133,11 +167,10 @@
         }
 
         button {
-            width: 100%;
-            padding: 18px;
+            padding: 16px 24px;
             border: none;
             border-radius: 8px;
-            font-size: 17px;
+            font-size: 16px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -150,6 +183,34 @@
 
         .btn-primary:hover {
             background: var(--primary-dark);
+        }
+
+        .btn-sla {
+            background: #9C27B0;
+            color: white;
+        }
+
+        .btn-sla:hover {
+            background: #7B1FA2;
+        }
+
+        .btn-profit {
+            background: #FF9800;
+            color: white;
+        }
+
+        .btn-profit:hover {
+            background: #F57C00;
+        }
+
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--text);
+            border: 2px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--background);
         }
 
         .result {
@@ -191,25 +252,129 @@
             border-bottom: none;
         }
 
-        .navigation {
+        .button-group {
             display: flex;
-            gap: 15px;
-            margin-top: 30px;
-            justify-content: center;
+            gap: 12px;
+            margin-top: 8px;
         }
 
-        .nav-btn {
-            padding: 12px 24px;
+        .project-save {
+            margin-top: 20px;
+            padding: 20px;
             background: var(--surface);
-            color: var(--text);
-            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            border: 2px dashed var(--border);
+        }
+
+        .saved-projects {
+            margin-top: 20px;
+        }
+
+        .project-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: var(--surface);
             border-radius: 8px;
-            text-decoration: none;
-            font-weight: 500;
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+        }
+
+        .project-item:hover {
+            background: var(--background);
+        }
+
+        .project-info {
+            flex: 1;
+        }
+
+        .project-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .project-details {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .project-cost {
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .empty-projects {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 40px 20px;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .metric-card {
+            background: rgba(255,255,255,0.2);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+
+        .metric-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .profit-positive { color: #4CAF50; }
+        .profit-negative { color: #f44336; }
+        .markup-color { color: #FFC107; }
+        .margin-color { color: #2196F3; }
+
+        .warning {
+            background: rgba(244, 67, 54, 0.9);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+            display: none;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .quick-prices {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .quick-price-btn {
+            padding: 10px;
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 14px;
             transition: all 0.2s ease;
         }
 
-        .nav-btn:hover {
+        .quick-price-btn:hover {
             background: var(--primary);
             color: white;
             border-color: var(--primary);
@@ -219,207 +384,564 @@
 <body>
     <div class="app">
         <div class="header">
-            <h1>🔄 FDM Калькулятор</h1>
-            <p>Расчет себестоимости FDM печати</p>
+            <h1>🧮 3D Print Calculators</h1>
+            <p>Все калькуляторы в одном месте</p>
         </div>
 
-        <div class="card">
-            <h2>Основные параметры</h2>
-            
-            <div class="form-group">
-                <label for="projectName">Название проекта:</label>
-                <input type="text" id="projectName" placeholder="Моя модель" value="Текущая печать">
-            </div>
-
-            <div class="form-group">
-                <label for="filamentType">Тип пластика:</label>
-                <select id="filamentType">
-                    <option value="pla">PLA</option>
-                    <option value="petg">PETG</option>
-                    <option value="abs">ABS</option>
-                    <option value="asa">ASA</option>
-                    <option value="tpu">TPU</option>
-                    <option value="nylon">Nylon</option>
-                    <option value="pc">Polycarbonate</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="filamentPrice">Цена катушки (руб):</label>
-                <div class="input-with-unit">
-                    <input type="number" id="filamentPrice" value="1500" step="0.01">
-                    <span class="unit">₽</span>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="modelWeight">Вес модели (г):</label>
-                <div class="input-with-unit">
-                    <input type="number" id="modelWeight" value="20" step="0.01">
-                    <span class="unit">г</span>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="printTime">Время печати:</label>
-                <div class="input-with-unit">
-                    <input type="number" id="printTime" value="5" step="0.01">
-                    <span class="unit">ч</span>
-                </div>
-            </div>
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('fdm')">🔄 FDM</button>
+            <button class="tab" onclick="switchTab('sla')">🧪 SLA</button>
+            <button class="tab" onclick="switchTab('profit')">💰 Прибыль</button>
         </div>
 
-        <div class="card">
-            <h2>Энергопотребление</h2>
-            
-            <div class="form-group">
-                <label for="printerPower">Мощность принтера (Вт):</label>
-                <div class="input-with-unit">
-                    <input type="number" id="printerPower" value="200">
-                    <span class="unit">Вт</span>
+        <!-- FDM Калькулятор -->
+        <div id="fdm-tab" class="tab-content active">
+            <div class="card fdm-card">
+                <h2>Основные параметры FDM</h2>
+                
+                <div class="form-group">
+                    <label for="fdmProjectName">Название проекта:</label>
+                    <input type="text" id="fdmProjectName" placeholder="Моя FDM модель" value="FDM проект">
+                </div>
+
+                <div class="form-group">
+                    <label for="filamentType">Тип пластика:</label>
+                    <select id="filamentType">
+                        <option value="pla">PLA</option>
+                        <option value="petg">PETG</option>
+                        <option value="abs">ABS</option>
+                        <option value="asa">ASA</option>
+                        <option value="tpu">TPU</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="filamentPrice">Цена катушки (руб):</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="filamentPrice" value="1500" step="0.01">
+                        <span class="unit">₽</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="fdmModelWeight">Вес модели (г):</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="fdmModelWeight" value="20" step="0.01">
+                        <span class="unit">г</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="fdmPrintTime">Время печати:</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="fdmPrintTime" value="5" step="0.01">
+                        <span class="unit">ч</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="form-group">
-                <label for="electricityPrice">Стоимость электроэнергии:</label>
-                <div class="input-with-unit">
-                    <input type="number" id="electricityPrice" value="5.0" step="0.01">
-                    <span class="unit">₽/кВт·ч</span>
+            <div class="card">
+                <h2>Энергопотребление FDM</h2>
+                
+                <div class="form-group">
+                    <label for="fdmPrinterPower">Мощность принтера (Вт):</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="fdmPrinterPower" value="200">
+                        <span class="unit">Вт</span>
+                    </div>
                 </div>
-            </div>
-        </div>
 
-        <div class="card">
-            <h2>Дополнительные расходы</h2>
-            
-            <div class="form-group">
-                <label for="printerCost">Стоимость принтера (руб):</label>
-                <div class="input-with-unit">
-                    <input type="number" id="printerCost" value="30000">
-                    <span class="unit">₽</span>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="printerLifespan">Срок службы принтера:</label>
-                <div class="input-with-unit">
-                    <input type="number" id="printerLifespan" value="5000">
-                    <span class="unit">ч</span>
+                <div class="form-group">
+                    <label for="fdmElectricityPrice">Стоимость электроэнергии:</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="fdmElectricityPrice" value="5.0" step="0.01">
+                        <span class="unit">₽/кВт·ч</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="form-group">
-                <label for="maintenanceCost">Расходы на обслуживание:</label>
-                <div class="input-with-unit">
-                    <input type="number" id="maintenanceCost" value="500">
-                    <span class="unit">₽/мес</span>
+            <button class="btn-primary" onclick="calculateFDM()">🧮 Рассчитать FDM</button>
+
+            <div id="fdmResult" class="result">
+                <div class="total-cost" id="fdmTotalCost">0.00 ₽</div>
+                <div>Себестоимость FDM печати</div>
+                
+                <div class="breakdown">
+                    <div class="breakdown-item">
+                        <span>Пластик:</span>
+                        <span id="fdmCostPlastic">0.00 ₽</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span>Электричество:</span>
+                        <span id="fdmCostElectricity">0.00 ₽</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span>Амортизация:</span>
+                        <span id="fdmCostDepreciation">0.00 ₽</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="form-group">
-                <label for="workHoursPerMonth">Часов печати в месяц:</label>
-                <div class="input-with-unit">
-                    <input type="number" id="workHoursPerMonth" value="100">
-                    <span class="unit">ч</span>
+            <div class="project-save">
+                <div class="form-group">
+                    <label for="fdmSaveName">Сохранить проект как:</label>
+                    <input type="text" id="fdmSaveName" placeholder="Название проекта">
                 </div>
-            </div>
-
-            <div class="form-group">
-                <label for="operatorTime">Время на подготовку:</label>
-                <div class="input-with-unit">
-                    <input type="number" id="operatorTime" value="0.5" step="0.01">
-                    <span class="unit">ч</span>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="hourlyRate">Почасовая ставка:</label>
-                <div class="input-with-unit">
-                    <input type="number" id="hourlyRate" value="0">
-                    <span class="unit">₽/ч</span>
-                </div>
+                <button class="btn-secondary" onclick="saveFDMProject()">💾 Сохранить проект</button>
             </div>
         </div>
 
-        <button class="btn-primary" onclick="calculateCost()">🧮 Рассчитать стоимость</button>
+        <!-- SLA Калькулятор -->
+        <div id="sla-tab" class="tab-content">
+            <div class="card sla-card">
+                <h2>Основные параметры SLA</h2>
+                
+                <div class="form-group">
+                    <label for="slaProjectName">Название проекта:</label>
+                    <input type="text" id="slaProjectName" placeholder="Моя SLA модель" value="SLA проект">
+                </div>
 
-        <div id="result" class="result">
-            <div class="total-cost" id="totalCost">0.00 ₽</div>
-            <div>Себестоимость печати</div>
-            
-            <div class="breakdown">
-                <div class="breakdown-item">
-                    <span>Пластик:</span>
-                    <span id="costPlastic">0.00 ₽</span>
+                <div class="form-group">
+                    <label for="resinType">Тип смолы:</label>
+                    <select id="resinType">
+                        <option value="standard">Стандартная</option>
+                        <option value="tough">Прочная</option>
+                        <option value="flexible">Гибкая</option>
+                    </select>
                 </div>
-                <div class="breakdown-item">
-                    <span>Электричество:</span>
-                    <span id="costElectricity">0.00 ₽</span>
+
+                <div class="form-group">
+                    <label for="resinPrice">Цена смолы (руб/кг):</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="resinPrice" value="1900" step="0.01">
+                        <span class="unit">₽</span>
+                    </div>
                 </div>
-                <div class="breakdown-item">
-                    <span>Амортизация:</span>
-                    <span id="costDepreciation">0.00 ₽</span>
+
+                <div class="form-group">
+                    <label for="resinVolume">Объем смолы (мл):</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="resinVolume" value="60" step="1">
+                        <span class="unit">мл</span>
+                    </div>
                 </div>
-                <div class="breakdown-item">
-                    <span>Обслуживание:</span>
-                    <span id="costMaintenance">0.00 ₽</span>
+
+                <div class="form-group">
+                    <label for="slaPrintTime">Время печати:</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="slaPrintTime" value="6" step="0.01">
+                        <span class="unit">ч</span>
+                    </div>
                 </div>
-                <div class="breakdown-item">
-                    <span>Работа оператора:</span>
-                    <span id="costOperator">0.00 ₽</span>
+            </div>
+
+            <div class="card">
+                <h2>Постобработка SLA</h2>
+                
+                <div class="form-group">
+                    <label for="alcoholCost">Стоимость спирта для промывки:</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="alcoholCost" value="50" step="0.01">
+                        <span class="unit">₽</span>
+                    </div>
                 </div>
+
+                <div class="form-group">
+                    <label for="supportRemovalTime">Время удаления поддержек:</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="supportRemovalTime" value="0.25" step="0.01">
+                        <span class="unit">ч</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="operatorHourlyRate">Ставка оператора (руб/час):</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="operatorHourlyRate" value="0" step="0.01">
+                        <span class="unit">₽/ч</span>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-sla" onclick="calculateSLA()">🧮 Рассчитать SLA</button>
+
+            <div id="slaResult" class="result">
+                <div class="total-cost" id="slaTotalCost">0.00 ₽</div>
+                <div>Себестоимость SLA печати</div>
+                
+                <div class="breakdown">
+                    <div class="breakdown-item">
+                        <span>Смола:</span>
+                        <span id="slaCostResin">0.00 ₽</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span>Промывка спиртом:</span>
+                        <span id="slaCostAlcohol">0.00 ₽</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span>Электричество:</span>
+                        <span id="slaCostElectricity">0.00 ₽</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span>Амортизация:</span>
+                        <span id="slaCostDepreciation">0.00 ₽</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span>Работа оператора:</span>
+                        <span id="slaCostOperator">0.00 ₽</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="project-save">
+                <div class="form-group">
+                    <label for="slaSaveName">Сохранить проект как:</label>
+                    <input type="text" id="slaSaveName" placeholder="Название проекта">
+                </div>
+                <button class="btn-secondary" onclick="saveSLAProject()">💾 Сохранить проект</button>
             </div>
         </div>
 
-        <div class="navigation">
-            <a href="sla.html" class="nav-btn">🧪 SLA Калькулятор</a>
-            <a href="profit.html" class="nav-btn">💰 Прибыль</a>
+        <!-- Калькулятор прибыли -->
+        <div id="profit-tab" class="tab-content">
+            <div class="card profit-card">
+                <h2>Выбор проекта</h2>
+                
+                <div class="form-group">
+                    <label for="projectSelect">Выберите сохраненный проект:</label>
+                    <select id="projectSelect" onchange="loadSelectedProject()">
+                        <option value="">-- Выберите проект --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="profitProjectName">Или введите название:</label>
+                    <input type="text" id="profitProjectName" placeholder="Название заказа" value="Текущий заказ">
+                </div>
+
+                <div class="form-group">
+                    <label for="profitCostPrice">Себестоимость (руб):</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="profitCostPrice" placeholder="Автоматически или вручную" step="0.01">
+                        <span class="unit">₽</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="profitSalePrice">Цена для клиента (руб):</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="profitSalePrice" value="1000" step="0.01">
+                        <span class="unit">₽</span>
+                    </div>
+                    
+                    <div class="quick-prices">
+                        <div class="quick-price-btn" onclick="setPrice(500)">500₽</div>
+                        <div class="quick-price-btn" onclick="setPrice(750)">750₽</div>
+                        <div class="quick-price-btn" onclick="setPrice(1000)">1000₽</div>
+                        <div class="quick-price-btn" onclick="setPrice(1500)">1500₽</div>
+                        <div class="quick-price-btn" onclick="setPrice(2000)">2000₽</div>
+                        <div class="quick-price-btn" onclick="setPrice(2500)">2500₽</div>
+                    </div>
+                </div>
+
+                <button class="btn-profit" onclick="calculateProfit()">💸 Рассчитать прибыль</button>
+            </div>
+
+            <div id="profitResult" class="result">
+                <div class="total-cost" id="profitTotal">0 ₽</div>
+                <div>Чистая прибыль</div>
+                
+                <div class="metrics">
+                    <div class="metric-card">
+                        <div class="metric-label">Наценка</div>
+                        <div class="metric-value markup-color" id="profitMarkup">0%</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Маржинальность</div>
+                        <div class="metric-value margin-color" id="profitMargin">0%</div>
+                    </div>
+                </div>
+
+                <div id="profitWarning" class="warning">
+                    ⚠️ Вы продаете себе в убыток!
+                </div>
+            </div>
+
+            <div class="card saved-projects">
+                <h2>📊 Сохраненные проекты</h2>
+                <div id="projectsList">
+                    <div class="empty-projects">
+                        Нет сохраненных проектов<br>
+                        <small>Сохраните проекты в FDM или SLA калькуляторах</small>
+                    </div>
+                </div>
+                
+                <button class="btn-secondary" onclick="clearAllProjects()" style="width: 100%; margin-top: 10px;">
+                    🗑️ Очистить все проекты
+                </button>
+            </div>
         </div>
     </div>
 
     <script>
-        function calculateCost() {
-            // Получаем значения
+        // Глобальные переменные
+        let savedProjects = JSON.parse(localStorage.getItem('printProjects') || '[]');
+        let currentFDMCalculation = null;
+        let currentSLACalculation = null;
+
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProjects();
+            calculateFDM();
+            calculateSLA();
+            calculateProfit();
+        });
+
+        // Переключение вкладок
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.target.classList.add('active');
+            
+            if (tabName === 'profit') {
+                loadProjects();
+            }
+        }
+
+        // ===== FDM КАЛЬКУЛЯТОР =====
+        function calculateFDM() {
             const filamentPrice = parseFloat(document.getElementById('filamentPrice').value) || 0;
-            const modelWeight = parseFloat(document.getElementById('modelWeight').value) || 0;
-            const printTime = parseFloat(document.getElementById('printTime').value) || 0;
-            const printerPower = parseFloat(document.getElementById('printerPower').value) || 0;
-            const electricityPrice = parseFloat(document.getElementById('electricityPrice').value) || 0;
-            const printerCost = parseFloat(document.getElementById('printerCost').value) || 0;
-            const printerLifespan = parseFloat(document.getElementById('printerLifespan').value) || 1;
-            const maintenanceCost = parseFloat(document.getElementById('maintenanceCost').value) || 0;
-            const workHoursPerMonth = parseFloat(document.getElementById('workHoursPerMonth').value) || 1;
-            const operatorTime = parseFloat(document.getElementById('operatorTime').value) || 0;
-            const hourlyRate = parseFloat(document.getElementById('hourlyRate').value) || 0;
+            const modelWeight = parseFloat(document.getElementById('fdmModelWeight').value) || 0;
+            const printTime = parseFloat(document.getElementById('fdmPrintTime').value) || 0;
+            const printerPower = parseFloat(document.getElementById('fdmPrinterPower').value) || 0;
+            const electricityPrice = parseFloat(document.getElementById('fdmElectricityPrice').value) || 0;
+            const printerCost = 30000; // Стоимость принтера
+            const printerLifespan = 5000; // Срок службы в часах
 
             // Расчеты
             const plasticCost = (modelWeight / 1000) * filamentPrice;
             const electricityCost = (printerPower * printTime / 1000) * electricityPrice;
-            const printerDepreciation = (printerCost / printerLifespan) * printTime;
-            const maintenanceCostPerHour = maintenanceCost / workHoursPerMonth;
-            const totalMaintenanceCost = maintenanceCostPerHour * printTime;
-            const operatorCost = operatorTime * hourlyRate;
+            const depreciationCost = (printerCost / printerLifespan) * printTime;
 
-            // Итог
-            const totalCost = plasticCost + electricityCost + printerDepreciation + totalMaintenanceCost + operatorCost;
+            const totalCost = plasticCost + electricityCost + depreciationCost;
 
             // Показываем результат
-            document.getElementById('totalCost').textContent = totalCost.toFixed(2) + ' ₽';
-            document.getElementById('costPlastic').textContent = plasticCost.toFixed(2) + ' ₽';
-            document.getElementById('costElectricity').textContent = electricityCost.toFixed(2) + ' ₽';
-            document.getElementById('costDepreciation').textContent = printerDepreciation.toFixed(2) + ' ₽';
-            document.getElementById('costMaintenance').textContent = totalMaintenanceCost.toFixed(2) + ' ₽';
-            document.getElementById('costOperator').textContent = operatorCost.toFixed(2) + ' ₽';
+            document.getElementById('fdmTotalCost').textContent = totalCost.toFixed(2) + ' ₽';
+            document.getElementById('fdmCostPlastic').textContent = plasticCost.toFixed(2) + ' ₽';
+            document.getElementById('fdmCostElectricity').textContent = electricityCost.toFixed(2) + ' ₽';
+            document.getElementById('fdmCostDepreciation').textContent = depreciationCost.toFixed(2) + ' ₽';
             
-            document.getElementById('result').classList.add('show');
+            document.getElementById('fdmResult').classList.add('show');
+
+            // Сохраняем для проекта
+            currentFDMCalculation = {
+                type: 'fdm',
+                name: document.getElementById('fdmProjectName').value,
+                cost: totalCost,
+                details: { plasticCost, electricityCost, depreciationCost },
+                params: { modelWeight, printTime, filamentPrice }
+            };
         }
 
-        // Авторасчет при загрузке
-        calculateCost();
+        function saveFDMProject() {
+            if (!currentFDMCalculation) return;
+            
+            const saveName = document.getElementById('fdmSaveName').value || currentFDMCalculation.name;
+            const project = {
+                ...currentFDMCalculation,
+                name: saveName,
+                timestamp: new Date().toISOString(),
+                id: Date.now().toString()
+            };
+            
+            savedProjects.push(project);
+            localStorage.setItem('printProjects', JSON.stringify(savedProjects));
+            loadProjects();
+            alert('FDM проект сохранен: ' + saveName);
+            document.getElementById('fdmSaveName').value = '';
+        }
+
+        // ===== SLA КАЛЬКУЛЯТОР =====
+        function calculateSLA() {
+            const resinPrice = parseFloat(document.getElementById('resinPrice').value) || 0;
+            const resinVolume = parseFloat(document.getElementById('resinVolume').value) || 0;
+            const printTime = parseFloat(document.getElementById('slaPrintTime').value) || 0;
+            const alcoholCost = parseFloat(document.getElementById('alcoholCost').value) || 0;
+            const supportRemovalTime = parseFloat(document.getElementById('supportRemovalTime').value) || 0;
+            const operatorHourlyRate = parseFloat(document.getElementById('operatorHourlyRate').value) || 0;
+            const printerCost = 15000;
+            const hoursPerMonth = 70;
+            const printerPower = 60;
+            const electricityPrice = 5.0;
+
+            // Расчет стоимости смолы (плотность 1.15 г/мл)
+            const resinWeight = resinVolume * 1.15;
+            const resinCost = (resinWeight / 1000) * resinPrice;
+
+            // Электроэнергия
+            const electricityCost = (printerPower * printTime / 1000) * electricityPrice;
+
+            // Амортизация
+            const depreciationCost = (printerCost / (hoursPerMonth * 12)) * printTime;
+
+            // Оператор - ТОЛЬКО если указана ставка!
+            const operatorCost = operatorHourlyRate > 0 ? (supportRemovalTime * operatorHourlyRate) : 0;
+
+            const totalCost = resinCost + alcoholCost + electricityCost + depreciationCost + operatorCost;
+
+            // Показываем результат
+            document.getElementById('slaTotalCost').textContent = totalCost.toFixed(2) + ' ₽';
+            document.getElementById('slaCostResin').textContent = resinCost.toFixed(2) + ' ₽';
+            document.getElementById('slaCostAlcohol').textContent = alcoholCost.toFixed(2) + ' ₽';
+            document.getElementById('slaCostElectricity').textContent = electricityCost.toFixed(2) + ' ₽';
+            document.getElementById('slaCostDepreciation').textContent = depreciationCost.toFixed(2) + ' ₽';
+            document.getElementById('slaCostOperator').textContent = operatorCost.toFixed(2) + ' ₽';
+            
+            document.getElementById('slaResult').classList.add('show');
+
+            // Сохраняем для проекта
+            currentSLACalculation = {
+                type: 'sla',
+                name: document.getElementById('slaProjectName').value,
+                cost: totalCost,
+                details: { resinCost, alcoholCost, electricityCost, depreciationCost, operatorCost },
+                params: { resinVolume, printTime, resinPrice }
+            };
+        }
+
+        function saveSLAProject() {
+            if (!currentSLACalculation) return;
+            
+            const saveName = document.getElementById('slaSaveName').value || currentSLACalculation.name;
+            const project = {
+                ...currentSLACalculation,
+                name: saveName,
+                timestamp: new Date().toISOString(),
+                id: Date.now().toString()
+            };
+            
+            savedProjects.push(project);
+            localStorage.setItem('printProjects', JSON.stringify(savedProjects));
+            loadProjects();
+            alert('SLA проект сохранен: ' + saveName);
+            document.getElementById('slaSaveName').value = '';
+        }
+
+        // ===== КАЛЬКУЛЯТОР ПРИБЫЛИ =====
+        function loadProjects() {
+            const projectSelect = document.getElementById('projectSelect');
+            const projectsList = document.getElementById('projectsList');
+            
+            // Обновляем select
+            projectSelect.innerHTML = '<option value="">-- Выберите проект --</option>';
+            savedProjects.forEach(project => {
+                const option = document.createElement('option');
+                option.value = project.id;
+                option.textContent = `${project.type.toUpperCase()}: ${project.name} (${project.cost.toFixed(0)}₽)`;
+                projectSelect.appendChild(option);
+            });
+
+            // Обновляем список проектов
+            if (savedProjects.length === 0) {
+                projectsList.innerHTML = `
+                    <div class="empty-projects">
+                        Нет сохраненных проектов<br>
+                        <small>Сохраните проекты в FDM или SLA калькуляторах</small>
+                    </div>
+                `;
+                return;
+            }
+            
+            projectsList.innerHTML = savedProjects.map(project => `
+                <div class="project-item" onclick="loadProjectToProfit('${project.id}')">
+                    <div class="project-info">
+                        <div class="project-name">${project.type.toUpperCase()}: ${project.name}</div>
+                        <div class="project-details">
+                            ${new Date(project.timestamp).toLocaleDateString('ru-RU')} • 
+                            ${project.params.modelWeight || project.params.resinVolume || 0}${project.type === 'fdm' ? 'г' : 'мл'} • 
+                            ${project.params.printTime}ч
+                        </div>
+                    </div>
+                    <div class="project-cost">${project.cost.toFixed(0)}₽</div>
+                </div>
+            `).join('');
+        }
+
+        function loadSelectedProject() {
+            const projectId = document.getElementById('projectSelect').value;
+            if (projectId) {
+                loadProjectToProfit(projectId);
+            }
+        }
+
+        function loadProjectToProfit(projectId) {
+            const project = savedProjects.find(p => p.id === projectId);
+            if (project) {
+                document.getElementById('profitProjectName').value = project.name;
+                document.getElementById('profitCostPrice').value = project.cost.toFixed(2);
+                calculateProfit();
+            }
+        }
+
+        function calculateProfit() {
+            const costPrice = parseFloat(document.getElementById('profitCostPrice').value) || 0;
+            const salePrice = parseFloat(document.getElementById('profitSalePrice').value) || 0;
+
+            if (costPrice <= 0 || salePrice <= 0) return;
+
+            const netProfit = salePrice - costPrice;
+            const markup = ((salePrice - costPrice) / costPrice) * 100;
+            const margin = ((salePrice - costPrice) / salePrice) * 100;
+
+            document.getElementById('profitTotal').textContent = netProfit.toFixed(0) + ' ₽';
+            document.getElementById('profitMarkup').textContent = markup.toFixed(1) + '%';
+            document.getElementById('profitMargin').textContent = margin.toFixed(1) + '%';
+
+            const profitElement = document.getElementById('profitTotal');
+            const warningElement = document.getElementById('profitWarning');
+            
+            if (netProfit < 0) {
+                profitElement.className = 'total-cost profit-negative';
+                warningElement.style.display = 'block';
+            } else {
+                profitElement.className = 'total-cost profit-positive';
+                warningElement.style.display = 'none';
+            }
+
+            document.getElementById('profitResult').classList.add('show');
+        }
+
+        function setPrice(price) {
+            document.getElementById('profitSalePrice').value = price;
+            calculateProfit();
+        }
+
+        function clearAllProjects() {
+            if (confirm('Вы уверены, что хотите удалить все сохраненные проекты?')) {
+                savedProjects = [];
+                localStorage.setItem('printProjects', '[]');
+                loadProjects();
+                alert('Все проекты удалены');
+            }
+        }
 
         // Авторасчет при изменении полей
-        document.querySelectorAll('input, select').forEach(element => {
-            element.addEventListener('input', calculateCost);
+        document.querySelectorAll('#fdm-tab input, #fdm-tab select').forEach(element => {
+            element.addEventListener('input', calculateFDM);
+        });
+
+        document.querySelectorAll('#sla-tab input, #sla-tab select').forEach(element => {
+            element.addEventListener('input', calculateSLA);
+        });
+
+        document.querySelectorAll('#profit-tab input, #profit-tab select').forEach(element => {
+            element.addEventListener('input', calculateProfit);
         });
     </script>
 </body>
