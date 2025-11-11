@@ -72,11 +72,12 @@
             padding: 4px;
             margin-bottom: 20px;
             border: 1px solid var(--border);
+            flex-wrap: wrap;
         }
 
         .tab {
             flex: 1;
-            padding: 16px;
+            padding: 12px 8px;
             text-align: center;
             background: transparent;
             border: none;
@@ -85,6 +86,8 @@
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s ease;
+            font-size: 14px;
+            min-width: 80px;
         }
 
         .tab.active {
@@ -130,6 +133,7 @@
         .fdm-card h2::before { background: #4CAF50; }
         .sla-card h2::before { background: #9C27B0; }
         .profit-card h2::before { background: #FF9800; }
+        .settings-card h2::before { background: #607D8B; }
 
         .form-group {
             margin-bottom: 20px;
@@ -151,6 +155,23 @@
             background: var(--surface);
             color: var(--text);
             font-size: 16px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+        }
+
+        .checkbox-group label {
+            margin-bottom: 0;
+            font-weight: 500;
         }
 
         .input-with-unit {
@@ -201,6 +222,15 @@
 
         .btn-profit:hover {
             background: #F57C00;
+        }
+
+        .btn-settings {
+            background: #607D8B;
+            color: white;
+        }
+
+        .btn-settings:hover {
+            background: #546E7A;
         }
 
         .btn-secondary {
@@ -379,6 +409,44 @@
             color: white;
             border-color: var(--primary);
         }
+
+        .settings-section {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .settings-section:last-child {
+            border-bottom: none;
+        }
+
+        .color-print-options {
+            background: var(--background);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border-left: 4px solid #FF9800;
+        }
+
+        .status-message {
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
     </style>
 </head>
 <body>
@@ -392,6 +460,7 @@
             <button class="tab active" onclick="switchTab('fdm')">🔄 FDM</button>
             <button class="tab" onclick="switchTab('sla')">🧪 SLA</button>
             <button class="tab" onclick="switchTab('profit')">💰 Прибыль</button>
+            <button class="tab" onclick="switchTab('settings')">⚙️ Настройки</button>
         </div>
 
         <!-- FDM Калькулятор -->
@@ -438,6 +507,24 @@
                         <span class="unit">ч</span>
                     </div>
                 </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="colorPrint" onchange="toggleColorPrint()">
+                    <label for="colorPrint">🎨 Цветная печать (мультиматериал)</label>
+                </div>
+
+                <div id="colorPrintOptions" class="color-print-options" style="display: none;">
+                    <div class="form-group">
+                        <label for="filamentChanges">Количество смен филамента:</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="filamentChanges" value="1" min="1" step="1">
+                            <span class="unit">раз</span>
+                        </div>
+                        <div style="font-size: 14px; color: var(--text-secondary); margin-top: 5px;">
+                            💡 1 смена = 4г пластика на промывку
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="card">
@@ -471,6 +558,10 @@
                         <span>Пластик:</span>
                         <span id="fdmCostPlastic">0.00 ₽</span>
                     </div>
+                    <div class="breakdown-item" id="fdmWasteItem" style="display: none;">
+                        <span>Отходы на смены:</span>
+                        <span id="fdmCostWaste">0.00 ₽</span>
+                    </div>
                     <div class="breakdown-item">
                         <span>Электричество:</span>
                         <span id="fdmCostElectricity">0.00 ₽</span>
@@ -493,6 +584,7 @@
 
         <!-- SLA Калькулятор -->
         <div id="sla-tab" class="tab-content">
+            <!-- SLA калькулятор остается без изменений -->
             <div class="card sla-card">
                 <h2>Основные параметры SLA</h2>
                 
@@ -604,6 +696,7 @@
 
         <!-- Калькулятор прибыли -->
         <div id="profit-tab" class="tab-content">
+            <!-- Profit калькулятор остается без изменений -->
             <div class="card profit-card">
                 <h2>Выбор проекта</h2>
                 
@@ -681,6 +774,118 @@
                 </button>
             </div>
         </div>
+
+        <!-- Вкладка настроек -->
+        <div id="settings-tab" class="tab-content">
+            <div class="card settings-card">
+                <h2>⚙️ Настройки калькуляторов</h2>
+                
+                <div id="settingsMessage" class="status-message" style="display: none;"></div>
+
+                <div class="settings-section">
+                    <h3>🔄 Настройки FDM</h3>
+                    
+                    <div class="form-group">
+                        <label for="defaultFilamentPrice">Цена пластика по умолчанию (руб/кг):</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="defaultFilamentPrice" value="1500" step="0.01">
+                            <span class="unit">₽</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="defaultFDMPrinterCost">Стоимость FDM принтера (руб):</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="defaultFDMPrinterCost" value="30000">
+                            <span class="unit">₽</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="defaultFDMPrinterLifespan">Срок службы FDM принтера (часов):</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="defaultFDMPrinterLifespan" value="5000">
+                            <span class="unit">ч</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="defaultFDMPrinterPower">Мощность FDM принтера (Вт):</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="defaultFDMPrinterPower" value="200">
+                            <span class="unit">Вт</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>🧪 Настройки SLA</h3>
+                    
+                    <div class="form-group">
+                        <label for="defaultResinPrice">Цена смолы по умолчанию (руб/кг):</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="defaultResinPrice" value="1900" step="0.01">
+                            <span class="unit">₽</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="defaultSLAPrinterCost">Стоимость SLA принтера (руб):</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="defaultSLAPrinterCost" value="15000">
+                            <span class="unit">₽</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="defaultSLAHoursPerMonth">Часов печати в месяц (SLA):</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="defaultSLAHoursPerMonth" value="70">
+                            <span class="unit">ч</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="defaultSLAPrinterPower">Мощность SLA принтера (Вт):</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="defaultSLAPrinterPower" value="60">
+                            <span class="unit">Вт</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>💰 Общие настройки</h3>
+                    
+                    <div class="form-group">
+                        <label for="defaultElectricityPrice">Стоимость электроэнергии (руб/кВт·ч):</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="defaultElectricityPrice" value="5.0" step="0.01">
+                            <span class="unit">₽</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="defaultOperatorRate">Ставка оператора по умолчанию (руб/час):</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="defaultOperatorRate" value="0" step="0.01">
+                            <span class="unit">₽/ч</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-settings" onclick="saveSettings()">💾 Сохранить настройки</button>
+                    <button class="btn-secondary" onclick="loadSettings()">🔄 Загрузить настройки</button>
+                    <button class="btn-secondary" onclick="resetSettings()">🔄 Сбросить к умолчаниям</button>
+                </div>
+
+                <div class="button-group" style="margin-top: 20px;">
+                    <button class="btn-primary" onclick="applySettingsToFDM()">📥 Применить к FDM</button>
+                    <button class="btn-sla" onclick="applySettingsToSLA()">📥 Применить к SLA</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -688,9 +893,11 @@
         let savedProjects = JSON.parse(localStorage.getItem('printProjects') || '[]');
         let currentFDMCalculation = null;
         let currentSLACalculation = null;
+        let appSettings = JSON.parse(localStorage.getItem('printSettings') || '{}');
 
         // Инициализация при загрузке
         document.addEventListener('DOMContentLoaded', function() {
+            loadSettings();
             loadProjects();
             calculateFDM();
             calculateSLA();
@@ -714,6 +921,102 @@
             }
         }
 
+        // ===== НАСТРОЙКИ =====
+        function saveSettings() {
+            appSettings = {
+                // FDM настройки
+                defaultFilamentPrice: parseFloat(document.getElementById('defaultFilamentPrice').value) || 1500,
+                defaultFDMPrinterCost: parseFloat(document.getElementById('defaultFDMPrinterCost').value) || 30000,
+                defaultFDMPrinterLifespan: parseFloat(document.getElementById('defaultFDMPrinterLifespan').value) || 5000,
+                defaultFDMPrinterPower: parseFloat(document.getElementById('defaultFDMPrinterPower').value) || 200,
+                
+                // SLA настройки
+                defaultResinPrice: parseFloat(document.getElementById('defaultResinPrice').value) || 1900,
+                defaultSLAPrinterCost: parseFloat(document.getElementById('defaultSLAPrinterCost').value) || 15000,
+                defaultSLAHoursPerMonth: parseFloat(document.getElementById('defaultSLAHoursPerMonth').value) || 70,
+                defaultSLAPrinterPower: parseFloat(document.getElementById('defaultSLAPrinterPower').value) || 60,
+                
+                // Общие настройки
+                defaultElectricityPrice: parseFloat(document.getElementById('defaultElectricityPrice').value) || 5.0,
+                defaultOperatorRate: parseFloat(document.getElementById('defaultOperatorRate').value) || 0
+            };
+            
+            localStorage.setItem('printSettings', JSON.stringify(appSettings));
+            showMessage('Настройки сохранены!', 'success');
+        }
+
+        function loadSettings() {
+            if (Object.keys(appSettings).length > 0) {
+                // FDM настройки
+                document.getElementById('defaultFilamentPrice').value = appSettings.defaultFilamentPrice || 1500;
+                document.getElementById('defaultFDMPrinterCost').value = appSettings.defaultFDMPrinterCost || 30000;
+                document.getElementById('defaultFDMPrinterLifespan').value = appSettings.defaultFDMPrinterLifespan || 5000;
+                document.getElementById('defaultFDMPrinterPower').value = appSettings.defaultFDMPrinterPower || 200;
+                
+                // SLA настройки
+                document.getElementById('defaultResinPrice').value = appSettings.defaultResinPrice || 1900;
+                document.getElementById('defaultSLAPrinterCost').value = appSettings.defaultSLAPrinterCost || 15000;
+                document.getElementById('defaultSLAHoursPerMonth').value = appSettings.defaultSLAHoursPerMonth || 70;
+                document.getElementById('defaultSLAPrinterPower').value = appSettings.defaultSLAPrinterPower || 60;
+                
+                // Общие настройки
+                document.getElementById('defaultElectricityPrice').value = appSettings.defaultElectricityPrice || 5.0;
+                document.getElementById('defaultOperatorRate').value = appSettings.defaultOperatorRate || 0;
+                
+                showMessage('Настройки загружены!', 'success');
+            }
+        }
+
+        function resetSettings() {
+            if (confirm('Сбросить все настройки к значениям по умолчанию?')) {
+                appSettings = {};
+                localStorage.removeItem('printSettings');
+                loadSettings();
+                showMessage('Настройки сброшены!', 'success');
+            }
+        }
+
+        function applySettingsToFDM() {
+            document.getElementById('filamentPrice').value = appSettings.defaultFilamentPrice || 1500;
+            document.getElementById('fdmPrinterPower').value = appSettings.defaultFDMPrinterPower || 200;
+            document.getElementById('fdmElectricityPrice').value = appSettings.defaultElectricityPrice || 5.0;
+            calculateFDM();
+            showMessage('Настройки применены к FDM!', 'success');
+            switchTab('fdm');
+        }
+
+        function applySettingsToSLA() {
+            document.getElementById('resinPrice').value = appSettings.defaultResinPrice || 1900;
+            document.getElementById('operatorHourlyRate').value = appSettings.defaultOperatorRate || 0;
+            calculateSLA();
+            showMessage('Настройки применены к SLA!', 'success');
+            switchTab('sla');
+        }
+
+        function showMessage(text, type) {
+            const messageEl = document.getElementById('settingsMessage');
+            messageEl.textContent = text;
+            messageEl.className = `status-message status-${type}`;
+            messageEl.style.display = 'block';
+            
+            setTimeout(() => {
+                messageEl.style.display = 'none';
+            }, 3000);
+        }
+
+        // ===== ЦВЕТНАЯ ПЕЧАТЬ FDM =====
+        function toggleColorPrint() {
+            const colorPrintOptions = document.getElementById('colorPrintOptions');
+            const isColorPrint = document.getElementById('colorPrint').checked;
+            
+            if (isColorPrint) {
+                colorPrintOptions.style.display = 'block';
+            } else {
+                colorPrintOptions.style.display = 'none';
+            }
+            calculateFDM();
+        }
+
         // ===== FDM КАЛЬКУЛЯТОР =====
         function calculateFDM() {
             const filamentPrice = parseFloat(document.getElementById('filamentPrice').value) || 0;
@@ -721,15 +1024,31 @@
             const printTime = parseFloat(document.getElementById('fdmPrintTime').value) || 0;
             const printerPower = parseFloat(document.getElementById('fdmPrinterPower').value) || 0;
             const electricityPrice = parseFloat(document.getElementById('fdmElectricityPrice').value) || 0;
-            const printerCost = 30000; // Стоимость принтера
-            const printerLifespan = 5000; // Срок службы в часах
+            
+            const printerCost = appSettings.defaultFDMPrinterCost || 30000;
+            const printerLifespan = appSettings.defaultFDMPrinterLifespan || 5000;
 
             // Расчеты
             const plasticCost = (modelWeight / 1000) * filamentPrice;
             const electricityCost = (printerPower * printTime / 1000) * electricityPrice;
             const depreciationCost = (printerCost / printerLifespan) * printTime;
 
-            const totalCost = plasticCost + electricityCost + depreciationCost;
+            // Расчет отходов для цветной печати
+            let wasteCost = 0;
+            const isColorPrint = document.getElementById('colorPrint').checked;
+            const wasteItem = document.getElementById('fdmWasteItem');
+            
+            if (isColorPrint) {
+                const filamentChanges = parseInt(document.getElementById('filamentChanges').value) || 1;
+                const wastePerChange = 4; // 4г на смену
+                wasteCost = (filamentChanges * wastePerChange / 1000) * filamentPrice;
+                wasteItem.style.display = 'flex';
+                document.getElementById('fdmCostWaste').textContent = wasteCost.toFixed(2) + ' ₽';
+            } else {
+                wasteItem.style.display = 'none';
+            }
+
+            const totalCost = plasticCost + electricityCost + depreciationCost + wasteCost;
 
             // Показываем результат
             document.getElementById('fdmTotalCost').textContent = totalCost.toFixed(2) + ' ₽';
@@ -744,8 +1063,8 @@
                 type: 'fdm',
                 name: document.getElementById('fdmProjectName').value,
                 cost: totalCost,
-                details: { plasticCost, electricityCost, depreciationCost },
-                params: { modelWeight, printTime, filamentPrice }
+                details: { plasticCost, electricityCost, depreciationCost, wasteCost },
+                params: { modelWeight, printTime, filamentPrice, isColorPrint }
             };
         }
 
@@ -775,10 +1094,11 @@
             const alcoholCost = parseFloat(document.getElementById('alcoholCost').value) || 0;
             const supportRemovalTime = parseFloat(document.getElementById('supportRemovalTime').value) || 0;
             const operatorHourlyRate = parseFloat(document.getElementById('operatorHourlyRate').value) || 0;
-            const printerCost = 15000;
-            const hoursPerMonth = 70;
-            const printerPower = 60;
-            const electricityPrice = 5.0;
+            
+            const printerCost = appSettings.defaultSLAPrinterCost || 15000;
+            const hoursPerMonth = appSettings.defaultSLAHoursPerMonth || 70;
+            const printerPower = appSettings.defaultSLAPrinterPower || 60;
+            const electricityPrice = appSettings.defaultElectricityPrice || 5.0;
 
             // Расчет стоимости смолы (плотность 1.15 г/мл)
             const resinWeight = resinVolume * 1.15;
